@@ -59,6 +59,7 @@ def ejecutar_query_desde_json(data):
         print(query)
 
         cursor.execute(query)
+
         resultado = cursor.fetchall()
 
         cursor.close()
@@ -70,10 +71,11 @@ def ejecutar_query_desde_json(data):
         return {"error": str(e)}
 
 # =====================================================
-# CALCULAR HORA APROXIMADA DE FINALIZACIÓN
+# CALCULAR HORA FINAL
 # =====================================================
 
 def calcular_hora_final(timestamp_recibido, walltime):
+
     if not walltime:
         return timestamp_recibido.strftime("%H:%M:%S")
 
@@ -83,24 +85,42 @@ def calcular_hora_final(timestamp_recibido, walltime):
         return timestamp_recibido.strftime("%H:%M:%S")
 
     numero = int(numeros[0])
+
     walltime_lower = str(walltime).lower()
 
     if "hora" in walltime_lower:
-        timestamp_final = timestamp_recibido + timedelta(hours=numero)
+
+        timestamp_final = (
+            timestamp_recibido +
+            timedelta(hours=numero)
+        )
+
     elif "min" in walltime_lower:
-        timestamp_final = timestamp_recibido + timedelta(minutes=numero)
+
+        timestamp_final = (
+            timestamp_recibido +
+            timedelta(minutes=numero)
+        )
+
     elif "seg" in walltime_lower:
-        timestamp_final = timestamp_recibido + timedelta(seconds=numero)
+
+        timestamp_final = (
+            timestamp_recibido +
+            timedelta(seconds=numero)
+        )
+
     else:
+
         timestamp_final = timestamp_recibido
 
     return timestamp_final.strftime("%H:%M:%S")
 
 # =====================================================
-# PROCESAR PETICIÓN INDEPENDIENTE
+# PROCESAR PETICIÓN
 # =====================================================
 
 async def procesar_peticion(job_id):
+
     data = all_jobs[job_id]
 
     # =================================================
@@ -108,7 +128,10 @@ async def procesar_peticion(job_id):
     # =================================================
 
     data["status"] = "WAITING"
-    data["queued_at"] = datetime.now().strftime("%H:%M:%S")
+
+    data["queued_at"] = (
+        datetime.now().strftime("%H:%M:%S")
+    )
 
     data.setdefault("history", []).append({
         "status": "WAITING",
@@ -118,8 +141,13 @@ async def procesar_peticion(job_id):
     print("\n==============================")
     print("PETICIÓN ENCOLADA / WAITING")
     print("==============================")
+
     print(f"Job ID: {job_id}")
-    print(f"Esperando {DELAY_SECONDS} segundos antes de ejecutar...")
+
+    print(
+        f"Esperando "
+        f"{DELAY_SECONDS} segundos..."
+    )
 
     await asyncio.sleep(DELAY_SECONDS)
 
@@ -128,7 +156,10 @@ async def procesar_peticion(job_id):
     # =================================================
 
     data["status"] = "RUNNING"
-    data["started_at"] = datetime.now().strftime("%H:%M:%S")
+
+    data["started_at"] = (
+        datetime.now().strftime("%H:%M:%S")
+    )
 
     data["history"].append({
         "status": "RUNNING",
@@ -136,28 +167,59 @@ async def procesar_peticion(job_id):
     })
 
     print("\n==============================")
-    print("PETICIÓN EN EJECUCIÓN / RUNNING")
+    print("PETICIÓN EN EJECUCIÓN")
     print("==============================")
+
     print(f"Job ID: {job_id}")
 
+    # =================================================
+    # EJECUTAR QUERY
+    # =================================================
+
     resultado_query = ejecutar_query_desde_json(data)
+
+    # =================================================
+    # CONVERTIR DATETIME A STRING
+    # =================================================
+
+    resultado_query = json.loads(
+        json.dumps(
+            resultado_query,
+            default=str
+        )
+    )
 
     print("\n==============================")
     print("RESULTADO DEL QUERY")
     print("==============================")
-    print(json.dumps(resultado_query, indent=4))
+
+    print(
+        json.dumps(
+            resultado_query,
+            indent=4,
+            default=str
+        )
+    )
 
     data["resultado"] = resultado_query
 
-    # Simulación para que el estado RUNNING pueda verse en el dashboard
-    await asyncio.sleep(RUNNING_SIMULATION_SECONDS)
+    # =================================================
+    # SIMULACIÓN RUNNING
+    # =================================================
+
+    await asyncio.sleep(
+        RUNNING_SIMULATION_SECONDS
+    )
 
     # =================================================
     # COMPLETED
     # =================================================
 
     data["status"] = "COMPLETED"
-    data["completed_at"] = datetime.now().strftime("%H:%M:%S")
+
+    data["completed_at"] = (
+        datetime.now().strftime("%H:%M:%S")
+    )
 
     data["history"].append({
         "status": "COMPLETED",
@@ -167,7 +229,14 @@ async def procesar_peticion(job_id):
     print("\n==============================")
     print("PETICIÓN COMPLETADA")
     print("==============================")
-    print(json.dumps(data, indent=4))
+
+    print(
+        json.dumps(
+            data,
+            indent=4,
+            default=str
+        )
+    )
 
 # =====================================================
 # HOME
@@ -175,6 +244,7 @@ async def procesar_peticion(job_id):
 
 @app.get("/")
 async def home():
+
     return {
         "status": "Frontend API activo"
     }
@@ -185,18 +255,35 @@ async def home():
 
 @app.post("/task")
 async def recibir_peticion(data: dict):
-    timestamp_recibido = datetime.now()
-    timestamp_texto = timestamp_recibido.strftime("%H:%M:%S")
 
-    job_id = f"job_{len(all_jobs) + 1}"
+    timestamp_recibido = datetime.now()
+
+    timestamp_texto = (
+        timestamp_recibido.strftime("%H:%M:%S")
+    )
+
+    job_id = (
+        f"job_{len(all_jobs) + 1}"
+    )
 
     walltime = data.get("WallTime")
-    hora_final = calcular_hora_final(timestamp_recibido, walltime)
+
+    hora_final = calcular_hora_final(
+        timestamp_recibido,
+        walltime
+    )
 
     data["job_id"] = job_id
+
     data["status"] = "QUEUED"
-    data["timestamp_recibido"] = timestamp_texto
-    data["estimated_finish"] = hora_final
+
+    data["timestamp_recibido"] = (
+        timestamp_texto
+    )
+
+    data["estimated_finish"] = (
+        hora_final
+    )
 
     data["history"] = [
         {
@@ -208,18 +295,38 @@ async def recibir_peticion(data: dict):
     all_jobs[job_id] = data
 
     print("\n==============================")
-    print("NUEVA PETICIÓN RECIBIDA / QUEUED")
+    print("NUEVA PETICIÓN RECIBIDA")
     print("==============================")
-    print(json.dumps(data, indent=4))
 
-    asyncio.create_task(procesar_peticion(job_id))
+    print(
+        json.dumps(
+            data,
+            indent=4,
+            default=str
+        )
+    )
+
+    asyncio.create_task(
+        procesar_peticion(job_id)
+    )
 
     return {
-        "status": "Petición recibida y encolada",
-        "job_id": job_id,
-        "timestamp_recibido": timestamp_texto,
-        "estimated_finish": hora_final,
-        "message": f"La petición se ejecutará después de {DELAY_SECONDS} segundos"
+        "status":
+            "Petición recibida y encolada",
+
+        "job_id":
+            job_id,
+
+        "timestamp_recibido":
+            timestamp_texto,
+
+        "estimated_finish":
+            hora_final,
+
+        "message":
+            f"La petición se ejecutará "
+            f"después de "
+            f"{DELAY_SECONDS} segundos"
     }
 
 # =====================================================
@@ -228,11 +335,15 @@ async def recibir_peticion(data: dict):
 
 @app.get("/dashboard")
 async def dashboard():
+
     jobs = list(all_jobs.values())
 
     pending_jobs = [
         job for job in jobs
-        if job["status"] in ["QUEUED", "WAITING"]
+        if job["status"] in [
+            "QUEUED",
+            "WAITING"
+        ]
     ]
 
     running_jobs = [
@@ -247,17 +358,36 @@ async def dashboard():
 
     dashboard_data = {
         "total_jobs": len(jobs),
-        "pending_count": len(pending_jobs),
-        "running_count": len(running_jobs),
-        "completed_count": len(completed_jobs),
-        "pending_jobs": pending_jobs,
-        "running_jobs": running_jobs,
-        "completed_jobs": completed_jobs
+
+        "pending_count":
+            len(pending_jobs),
+
+        "running_count":
+            len(running_jobs),
+
+        "completed_count":
+            len(completed_jobs),
+
+        "pending_jobs":
+            pending_jobs,
+
+        "running_jobs":
+            running_jobs,
+
+        "completed_jobs":
+            completed_jobs
     }
 
     print("\n==============================")
     print("DASHBOARD GENERADO")
     print("==============================")
-    print(json.dumps(dashboard_data, indent=4))
+
+    print(
+        json.dumps(
+            dashboard_data,
+            indent=4,
+            default=str
+        )
+    )
 
     return dashboard_data
