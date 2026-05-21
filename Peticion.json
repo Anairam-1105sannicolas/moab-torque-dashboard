@@ -1,0 +1,10 @@
+{
+  "GPU": 4,
+  "RAM": "12GB",
+  "CPU": 16,
+  "Storage": "100GB",
+  "memory_peak": "2GB",
+  "WallTime": "12 horas",
+  "ProcessType": 1,
+  "Query": "SELECT Traffic_Signal, COUNT(*) AS total FROM General WHERE Zipcode = '43017' GROUP BY Traffic_Signal ORDER BY total DESC"
+}

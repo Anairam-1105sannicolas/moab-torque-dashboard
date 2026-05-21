@@ -1,0 +1,10 @@
+{
+  "GPU": 4,
+  "RAM": "12GB",
+  "CPU": 16,
+  "Storage": "100GB",
+  "memory_peak": "2GB",
+  "WallTime": "12 horas",
+  "ProcessType": 2,
+  "Query": "SELECT ID, Start_Time, Start_Lat, Start_Lng, CONCAT('https://www.google.com/maps?q=', Start_Lat, ',', Start_Lng) AS GoogleMapsURL FROM General WHERE Zipcode = '43017' AND TIME(Start_Time) >= '18:40:00' ORDER BY Start_Time ASC LIMIT 5"
+}

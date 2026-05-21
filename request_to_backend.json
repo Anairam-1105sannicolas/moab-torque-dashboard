@@ -1,0 +1,14 @@
+{
+    "GPU": 4,
+    "RAM": "12GB",
+    "CPU": 16,
+    "Storage": "100GB",
+    "memory_peak": "2GB",
+    "WallTime": "12 horas",
+    "ProcessType": 1,
+    "Query": "SELECT * FROM accidentes LIMIT 5",
+    "FrontendURL": "http://10.25.229.83:8000/task",
+    "FrontendIP": "10.25.229.83",
+    "FrontendPort": 8000,
+    "timestamp": "20:01:59"
+}
